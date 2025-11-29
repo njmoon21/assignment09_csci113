@@ -78,7 +78,7 @@ void lwMiss(Block &block0, Block &block1, int tag, int index, int rt_register, i
 
     victim_block->history = 1;
     if (victim_block == &block0)
-        block0.history = 1;
+        block1.history = 0;
     else
         block0.history = 0;
 
@@ -177,7 +177,7 @@ int main() {
         }
 
         // Decoding offset
-        for (int i = 31; i > 15; i--) {
+        for (int i = 31; i >= 16; i--) {
             if (s.at(i) == '1')
                 offset += pow(2, 31 - i);
         }
@@ -246,10 +246,10 @@ int main() {
 
         std::cout << "   ";
 
-        std::cout << i << "        " << cache[i][0].valid << "       ";
-        print4Bit(cache[i][0].tag);
+        std::cout << i << "        " << cache[i][1].valid << "       ";
+        print4Bit(cache[i][1].tag);
         std::cout << "      ";
-        print32Bit(cache[i][0].data);
+        print32Bit(cache[i][1].data);
         std::cout << "\n";
     }
 
