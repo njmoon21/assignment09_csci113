@@ -13,7 +13,8 @@
  *    Struct block {
  *       int Valid;
  *       int Tag;
- *       int Data
+ *       int Data;
+ *       int History;
  *    }
  *    Struct block[8][2];
  *
@@ -28,6 +29,7 @@
  *    SW Miss
  */
 
+// This will represent a block of cache memory
 struct Block {
     /*
      * valid = whether the cache block has data or not
@@ -41,7 +43,8 @@ struct Block {
     int history = 0;
 };
 
-void lwHit(Block &accessedBlock, Block &otherBlock, int rt_register, int* registers) { // Cache data -> reg.file[rt]
+// load word cache hit function: Cache data -> reg.file[rt]
+void lwHit(Block &accessedBlock, Block &otherBlock, int rt_register, int* registers) {
     registers[rt_register - 16] = accessedBlock.data;
     accessedBlock.history = 1;
     otherBlock.history = 0;
@@ -49,6 +52,7 @@ void lwHit(Block &accessedBlock, Block &otherBlock, int rt_register, int* regist
     std::cout << "hit\n";
 }
 
+// load word cache miss function (steps are commented inside the implementation)
 void lwMiss(Block &block0, Block &block1, int tag, int index, int rt_register, int* registers, int* main_memory) {
     /*
      * 1. Select victim block from 2 blocks;
@@ -85,7 +89,8 @@ void lwMiss(Block &block0, Block &block1, int tag, int index, int rt_register, i
     std::cout << "miss\n";
 }
 
-void swHit(Block &accessedBlock, Block &otherBlock, int rt_register, int* registers) { // reg.file[rt] --> cache data; (update cache only) WB cache
+// store word cache hit: reg.file[rt] --> cache data; (update cache only) WB cache
+void swHit(Block &accessedBlock, Block &otherBlock, int rt_register, int* registers) {
     accessedBlock.data = registers[rt_register - 16];
     accessedBlock.history = 1;
     otherBlock.history = 0;
@@ -93,12 +98,14 @@ void swHit(Block &accessedBlock, Block &otherBlock, int rt_register, int* regist
     std::cout << "hit\n";
 }
 
-void swMiss(int physical_address, int rt_register, int* registers, int* main_memory) { // reg.file[rt] --> memory[word_addr]; (update memory only)
+// store word cache miss: reg.file[rt] --> memory[word_addr]; (update memory only)
+void swMiss(int physical_address, int rt_register, int* registers, int* main_memory) {
     main_memory[physical_address] = registers[rt_register - 16];
 
     std::cout << "miss\n";
 }
 
+// Function for printing the 32bit addresses on the console (e.g., 32bit instructions, register/cache/memory data values)
 void print32Bit(int v){
     int mask = 1; // mask = 00000000000000000000000000000001
     mask <<= 31; // shift left 31 positions
@@ -113,6 +120,7 @@ void print32Bit(int v){
     }
 }
 
+// Need a 4-bit version of print to output the tag values of the cache blocks
 void print4Bit(int v) {
     int mask = 1;
     mask <<= 3;
@@ -143,6 +151,7 @@ int main() {
      * 6. repeat step 1~5 for each instruction in the input data file (while loop until EOF).
      */
 
+    // Initializing register files s0-s7
     int register_file[8] = {0}; // 8 register files with all 0's
 
     Block cache[8][2]; // 2-way set associative cache with all 0's ; initialize every index with empty blocks
@@ -155,9 +164,11 @@ int main() {
     for (int i = 0; i < 128; i++)
         main_memory[i] = i + 5;
 
+    // Opening the file to read from
     std::ifstream file("input_object_code");
     std::string s;
 
+    // Reading each line from the object file
     while (std::getline(file,s)){
         int opcode;
         int rt_register = 0;
